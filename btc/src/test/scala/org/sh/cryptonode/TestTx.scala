@@ -82,7 +82,7 @@ object TestCorrectlySpendsP2PKH {
       "1LfoGGtjDLE4yBurvnwPKDyHFwD7emQDqq",
       "1N3JVEPmmC4zSRdppFrHDQaXGqVCUWTWpE",
       "12KDyoRUd7JLKYe1Ywn4XFeDnGw2vqb1sp",
-      "14e5YtfVYn6xJMCj77dRW5ESJCGyExx4vs" // this address is wrong
+      "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" // this address is wrong
     ),
     false /* valid for addresses */, true /* signatures match */
   )
