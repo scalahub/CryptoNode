@@ -41,7 +41,7 @@ import org.sh.cryptonode.util.BytesUtil._
           Address (string): depends on type of network, compression used and the subclass of PubKey
  */
 object PrvKey {
-  private def getECCPrvKeyAndNet(wif:String) = {
+  private [cryptonode] def getECCPrvKeyAndNet(wif:String) = {
     val bytes = Base58Check.decodePlain(wif).dropRight(4)
     val (mainNetByte, testNetByte) = (0x80.toByte, 0xef.toByte)
     val mainNet = bytes(0) match {
