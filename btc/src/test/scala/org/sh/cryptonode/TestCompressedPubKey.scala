@@ -10,7 +10,7 @@ import org.sh.cryptonode.util.StringUtil._
 import scala.collection.JavaConverters._
 
 object TestCompressedPubKey extends App {
-  /*  https://bitcoin.stackexchange.com/a/22881/2075 
+  /*  https://bitcoin.stackexchange.com/a/22881/2075
       https://gist.github.com/scalahub/96f31c6656802b5547a28a03d6d22cff */
 
   val str = """
@@ -25,13 +25,13 @@ Public address 18m1EvVCeFsupQSsdZ3rTPGjL6j9hQpoj5
 Message: test123
 Signature: H5TIq/7pLqy2M9lUGUa9i1kxML4EmWN+MwiyijquyMhcbTuAiOjffxRz7xayj4qaAig8Y1OZFn/aqWDkM5GXVqQ=
 MySig: H0PnKxfGqSG5g7O8pru8RkkthWFyQl8qmuV8ibS+3bcKXyYtxdfEg439zCoCeKJZlHpEE8FGtKkEsuf5QU7boRg=
-  
+
 Private as int 26841850108733854068844877092845755783895918659584173218404826715393242032133
 Public address 1FRUjbVX9bbctP6y7Z7jmBufdW6KyoSvGw
 Message: test123
 Signature: HxypbxPc+0rICT/x6AWkGoQjE/rE7UtCLy0eS0uGn4WFGlrLkJxJDgJcIgwGDH6MdIiWL/E+cvPv2dqeHw5zCwA=
 MySig: IEPGKHmsG0ViSNF/LIVzmlJtDH3he60lg9NGmbZ7u67xPvPaauNcv4oZ2iBDR4I3PGMdHWhSPxrrm0wgZDl1xBs=
-  
+
 Private as int 86520705923672484424543748367654505450021158466896423122495789612346391207140
 Public address 1NQvJ2X1KVwuYPQRdeiDbFanLod72UPEjg
 Message: test123
@@ -113,7 +113,7 @@ MySig: IAjLYjtaScVd1haZiSfnDS/yQyy1RUXpB/Yug9YHaiaKLXI8ihHe3PGDZB2YIAJP6ivfpwBXr
   val compressed = true
   val mainNet = true
   // val testStrs = str.lines.map(_.trim).toArray.filterNot(_.isEmpty).grouped(5)
-  val testStrs = str.lines.iterator().asScala.map(s => s.trim).filterNot(_.isEmpty).grouped(5)
+  val testStrs = str.lines.map(s => s.trim).filterNot(_.isEmpty).grouped(5)
   testStrs.foreach{seq =>
     print(".")
     val _prvKeyInt = seq(0).drop("Private as int ".size).trim
@@ -123,7 +123,7 @@ MySig: IAjLYjtaScVd1haZiSfnDS/yQyy1RUXpB/Yug9YHaiaKLXI8ihHe3PGDZB2YIAJP6ivfpwBXr
     val _sig = _sigStr.decodeBase64
     val _deterSigStr = seq(4).drop("MySig: ".size).trim
     val _deterSig = _deterSigStr.decodeBase64
-   
+
     val prvKey = new PrvKey_P2PKH(new ECCPrvKey(BigInt(_prvKeyInt), compressed), mainNet)
     val hash = dsha256(getMessageToSignBitcoinD(_msg))
     val addr = prvKey.pubKey.address
@@ -131,11 +131,11 @@ MySig: IAjLYjtaScVd1haZiSfnDS/yQyy1RUXpB/Yug9YHaiaKLXI8ihHe3PGDZB2YIAJP6ivfpwBXr
     val recoveredPubKey = recoverPubKey(_sig, hash)
     require(recoveredPubKey == prvKey.pubKey.eccPubKey)
     assert(recoveredPubKey.point.verifyMessageBitcoinD(_msg, _sigStr))
-    
+
     val (id, _r, _s) = decodeRecoverySig(_sig)
     require(recoveredPubKey.point.verify(hash, _r, _s))
     val ourSigStr = prvKey.eccPrvKey.signMessageBitcoinD(_msg)
-    
+
     assert(_deterSigStr == ourSigStr, s"Deterministic signature mismatch. Expected ${_deterSigStr}. Found $ourSigStr")
     val (ourId, r, s) = decodeRecoverySig(ourSigStr.decodeBase64)
     assert(prvKey.pubKey.eccPubKey.point.verifyMessageBitcoinD(_msg, ourSigStr))

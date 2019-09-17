@@ -363,7 +363,7 @@ You get what you pay for.
 You can't win them all.
 You have to break a few eggs to make an omlette.
 You have to take the good  with the bad.
-You win some, you lose some.""".lines.iterator().asScala.map(_.trim).toArray
+You win some, you lose some.""".lines.map(_.trim).toArray
   val keys1 = (1 to msgs.size).map{i =>
     new ECCPrvKey(i, true)
   }.toArray
@@ -387,7 +387,7 @@ object Validate_RFC6979_TestVectors extends App {
   val tvs = Seq(tv1, tv2, tv3, tv4, tv5, tv6, tv7, tv8, tv9, tv10, tv11, tv12)
   val x = tvs.flatMap{tv => 
     print(".")
-    tv.lines.iterator().asScala.map{line =>
+    tv.lines.map{line =>
       val a = line.split(",")
       val k = BigInt(a(0).drop(1))
       val s = a.last.dropRight(1).toLowerCase

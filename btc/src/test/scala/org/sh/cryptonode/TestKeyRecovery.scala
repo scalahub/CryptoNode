@@ -27,7 +27,7 @@ object TestKeyRecovery1 {
   val b = a.eccPubKey
   val c = a.sign("hello")
   val h = sha256Bytes2Bytes("hello".getBytes)
-  val (r, s) = decodeDERSig(c)    
+  val (r, s) = decodeDERSig(c)
   val recovered = recoverPubKeyPoints(r, s, h)
   assert(recovered.size == 4)
   recovered.flatten.foreach{pk =>
@@ -43,7 +43,7 @@ object TestKeyRecovery2 {
   val c = a.sign("hello")
   //////////////////////////////////
   val h = sha256Bytes2Bytes("hello".getBytes)
-  val (r, s) = decodeDERSig(c)    
+  val (r, s) = decodeDERSig(c)
   val z = BigInt(h.encodeHex, 16)
   val rInv = r.modInverse(n)
 
@@ -57,7 +57,7 @@ object TestKeyRecovery2 {
   assert(b.point.verify(h, r, s))
   assert(P1.verify(h, r, s))
   assert(P2.verify(h, r, s))
-  
+
   val recovered = recoverPubKeyPoints(r, s, h)
   assert(recovered.size == 4)
   recovered.flatten.foreach{pk =>
@@ -75,7 +75,7 @@ object TestKeyRecovery3 {
   val (r, s) = decodeDERSig(sig)
   val recovered = recoverPubKeyPoints(r, s, h)
   assert(recovered.size == 4)
-  recovered.flatten.map{pk =>  
+  recovered.flatten.map{pk =>
     assert(pk.verify(h, r, s))
   }
 }
@@ -83,12 +83,12 @@ object TestKeyRecovery4 {
   println("Test 4: [use test vectors to validate every value (sig, address, pubkey)]")
   isMainNet = false
   // tv = "test vector". Taken from: https://gist.github.com/scalahub/cf5af5a9291a07a0331798287a9ad0d9
-  val tv1 = """ 
+  val tv1 = """
     message       = 18426974636F696E205369676E6564204D6573736167653A0A17736F206D616E7920746F2063686F6F73652066726F6D21
     sighash       = BC2BE447AB153822FB7735D699E97FB60D123CF48839EA4E01D0A27A8851E497
     signed hash   = sha256(sighash) = 07B89120042681958748D7695C21FBCF1819E18235E258222EFF35E7A3FFA80F
     DER signature = 3006020107020104
-    
+
     mxFhqDzktEtt8wJX9H5XudWioZh7AcV5zh HQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 04C0F30B1DE11DFAFA42340B60C1D486F6D88CDE3054AA0CA1235D95115C21859CC591D66B09243438B852BF9C4A2E70ED7EEA6C4235919CCC5BF34BBB84A94222
     muJWi9mxRzxa2cqv2DckjVe7HM8tvUxtyt HgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
@@ -97,13 +97,13 @@ object TestKeyRecovery4 {
     # 02C0F30B1DE11DFAFA42340B60C1D486F6D88CDE3054AA0CA1235D95115C21859C
     mfiCy3urQBY1SYZnVrWiK7wZHQeySu6yN1 IgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 03095590F3231ED86265F20FCD06C215D8D2C1BFAD47EBF46285329E202C3D954E"""
-    
+
   val tv2 = """
     message       = 18426974636F696E205369676E6564204D6573736167653A0A17736F206D616E7920746F2063686F6F73652066726F6D21
     sighash       = BC2BE447AB153822FB7735D699E97FB60D123CF48839EA4E01D0A27A8851E497
     signed hash   = sha256(sighash) = 07B89120042681958748D7695C21FBCF1819E18235E258222EFF35E7A3FFA80F
     DER signature = 3006020101020104
-    
+
     mxCrYKsqBbFQiiQvEF2UnvYyvLTvUUC3md GwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 042213201BB85583092E2A85989370B3077DD7B8F4CFEA40F21D44FEE60B5453AFFD1CCFB9A27DB424108E0A4BFB3F0D1456B4929E59DBF51914CD7BD97C7EC94B
     mk4CLZc62HWQGZLWvxfmCwuq9oUNmeuaX3 HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
@@ -112,13 +112,13 @@ object TestKeyRecovery4 {
     # 032213201BB85583092E2A85989370B3077DD7B8F4CFEA40F21D44FEE60B5453AF
     mybEt9mXqAsRz6dQCr1YJBcjWeeVe1bCui IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 02998964010D86A983B30B867C1A091FD0524493866F49C3B79DACC48726F3A7CA"""
-    
+
   val tv3 = """
     message       = 18426974636F696E205369676E6564204D6573736167653A0A17736F206D616E7920746F2063686F6F73652066726F6D21
     sighash       = BC2BE447AB153822FB7735D699E97FB60D123CF48839EA4E01D0A27A8851E497
     signed hash   = sha256(sighash) = 07B89120042681958748D7695C21FBCF1819E18235E258222EFF35E7A3FFA80F
     DER signature = 3006020104020104
-    
+
     mnYmtKBnu4KfzmPuom4NJp7y3J88KHjcUy GwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 04767AFB64FE584EEC9452AC338CCFF57986D385219B796BAA0B26A817CB8FD7CD395C129B486C26F97653FC739F365DEEEDB4B2E633EF09629DC5EECAC5ADC18E
     n3Vemy1U4XAbJZx6ZSgCHqu6oCNUbq8gf6 HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
@@ -135,9 +135,9 @@ object TestKeyRecovery4 {
     # 02A65A76391FB958D7144B59E64D3FECF2FD5C33F6224805CD3D1C14F12EFC41D8
     mgc8VJrGBtEbmtjU3HUs5NMGe3gcAeemhc IgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ= "so many to choose from!"
     # 038537DAE07F5B54821726EB5C11563054C5D88FCBD40B63399C84C4EB4BA19638"""
-  
+
   Seq(tv1, tv2, tv3).map{tv =>
-    val lines = tv.lines.iterator().asScala.map(_.trim).filterNot(_.isEmpty).toArray  // remove empty lines
+    val lines = tv.lines.map(_.trim).filterNot(_.isEmpty).toArray  // remove empty lines
     val msg = lines(0).drop("message       = ".size)
     val sig = lines(3).drop("DER signature = ".size)
     val (r, s) = decodeDERSig(sig)
@@ -155,14 +155,14 @@ object TestKeyRecovery4 {
         val addr = a(0)
         val sig = a(1)
         val msg = a.drop(2).reduceLeft(_ + " " + _).drop(1).dropRight(1)
-        assert(rpk.point.verify(h, r, s))          
+        assert(rpk.point.verify(h, r, s))
         assert(msg == "so many to choose from!")
         val pkHex = line12(1).split("#")(1).trim
         assert(rpk.encodeRecoverySig(r, s, h).encodeBase64 == sig)
         assert(pkHex.toLowerCase == rpk.hex.toLowerCase)
         val btcPk = new PubKey_P2PKH(rpk, false) // testnet
         val newAddr = btcPk.address
-        assert(newAddr == addr, s"Expected $addr, found ${newAddr}")        
+        assert(newAddr == addr, s"Expected $addr, found ${newAddr}")
     }
   }
 }
@@ -171,7 +171,7 @@ object TestKeyRecovery5 {
   // test that decoding and encoding works correctly
   1 to 10 foreach {i =>
     1 to 10 foreach{j =>
-      0 to 7 foreach {recid => 
+      0 to 7 foreach {recid =>
         val e = encodeRecoverySigForIndex(recid, p - i, p - j)
         val (_k, _i, _j) = decodeRecoverySig(e)
         assert(_k == recid)
@@ -185,9 +185,9 @@ object TestKeyRecovery5 {
         assert(_k1 == recid)
         assert(_int1 == int1)
         assert(_int2 == int2)
-      }     
+      }
     }
-  } 
+  }
 }
 
 object TestKeyRecovery6 {
@@ -230,7 +230,7 @@ object TestKeyRecovery6 {
     val key = new PrvKey_P2SH_P2WPKH(int mod n, mainNet)
     val address = key.pubKey.address
     val eccPrvKey = key.eccPrvKey
-        
+
     val sig = eccPrvKey.signMessageBitcoinD(msg)
 
     val (byteIndex, r, s) = decodeRecoverySig(sig.decodeBase64) // byteIndex will be between 0 and 7 inclusive
@@ -251,11 +251,11 @@ object TestKeyRecovery6 {
     print(".")
   }
   println
-  
+
 }
 object TestKeyRecovery7 {
   println("Test 7: [check that bitcoind sign and verify work]")
-  
+
   val message = "ABCD"
   1 to 20 foreach {i =>
     Seq(true, false).map{compr =>
@@ -263,7 +263,7 @@ object TestKeyRecovery7 {
       val key = new ECCPrvKey(int mod n, compr)
       val sig = key.signMessageBitcoinD(message)
       val recovered:ECCPubKey = recoverPubKey(sig.decodeBase64, dsha256(getMessageToSignBitcoinD(message)))
-      assert(recovered == key.eccPubKey)      
+      assert(recovered == key.eccPubKey)
       assert(new PubKey_P2PKH(recovered, true).address == new PrvKey_P2PKH(key, true).pubKey.address)
       assert(recovered.point.verifyMessageBitcoinD(message, sig))
     }

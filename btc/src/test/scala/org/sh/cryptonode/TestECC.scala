@@ -34,7 +34,7 @@ object TestECC extends App {
     assert(R == Q + P)
     assert((n - a) * G == -P)
     assert((n - b) * G == -Q)
-    assert(((n - c) mod n) * G == -R)    
+    assert(((n - c) mod n) * G == -R)
   }
   println
   println("All ECC tests passed!")
@@ -43,11 +43,11 @@ object TestECC extends App {
     scala.util.Random.nextBytes(bytes)
     BigInt(bytes.encodeHex, 16)
   }
-  def assertException[T <: Exception, S](e:Class[T])(f: => S) = 
+  def assertException[T <: Exception, S](e:Class[T])(f: => S) =
     try {f; assert(false) } catch { case a:Any => assert(a.getClass == e) }
-  
+
   def testTvs(s:String, hexKey:Boolean) = {
-    s.lines.iterator.asScala.map(_.trim).filterNot(_.isEmpty).grouped(3).toArray.map{a =>
+    s.lines.map(_.trim).filterNot(_.isEmpty).grouped(3).toArray.map{a =>
       val k = a(0).drop("k = ".size).trim
       val x = a(1).drop("x = ".size).trim
       val y = a(2).drop("y = ".size).trim
@@ -58,10 +58,10 @@ object TestECC extends App {
       assertException(PointAtInfinityException.getClass)(n * point)
       // below code does exactly the same as above line
       try {
-        (n * point) 
+        (n * point)
         assert(false)
       } catch {
-        case a:Any => 
+        case a:Any =>
           assert(a == PointAtInfinityException)
       }
     }
@@ -251,8 +251,8 @@ y = E51E970159C23CC65C3A7BE6B99315110809CD9ACD992F1EDC9BCE55AF301705
 
 k = 115792089237316195423570985008687907852837564279074904382605163141518161494336
 x = 79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
-y = B7C52588D95C3B9AA25B0403F1EEF75702E84BB7597AABE663B82F6F04EF2777 
-"""  
+y = B7C52588D95C3B9AA25B0403F1EEF75702E84BB7597AABE663B82F6F04EF2777
+"""
 }
 object TestVectorsECC2 {
   val s = """
