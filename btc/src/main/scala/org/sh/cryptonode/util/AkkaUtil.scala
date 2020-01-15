@@ -37,7 +37,7 @@ object AkkaUtil {
 
   def doOnceLater(fn: => Unit, periodMillis:Long) = {
     val id = ctr.getAndIncrement
-    val cancellable = scheduler.scheduleOnce(periodMillis milliseconds){
+    val cancellable = scheduler.scheduleOnce(periodMillis.milliseconds){
       scheduledTasks.synchronized{scheduledTasks -= id}
       fn
     }
@@ -45,7 +45,7 @@ object AkkaUtil {
     cancellable
   }
   def doRegularly(fn: => Unit, periodMillis:Long) = {
-    val cancellable = scheduler.schedule(0 seconds, periodMillis milliseconds)(fn)
+    val cancellable = scheduler.schedule(0.seconds, periodMillis.milliseconds)(fn)
     scheduledTasks += ctr.getAndIncrement -> cancellable
     cancellable
   }

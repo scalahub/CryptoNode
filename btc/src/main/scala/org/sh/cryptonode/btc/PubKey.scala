@@ -39,7 +39,7 @@ class PubKey_P2SH_P2PK(eccPubKey:ECCPubKey, mainNet:Boolean) extends PubKey(eccP
   lazy val redeemScript = Seq(eccPubKey.bytes.size.toByte)++eccPubKey.bytes++Seq(OP_CheckSig)
   
   lazy val address = { // simple 1 out of 1 P2SH from BIP16
-    val redeemScriptHash = hash160(redeemScript.toArray)
+    val redeemScriptHash = hash160(redeemScript)
     val addrBytes = (if (mainNet) 0x05.toByte else 0xC4.toByte) +: redeemScriptHash
     getBase58FromBytes(addrBytes) 
   }

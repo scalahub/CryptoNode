@@ -2,11 +2,10 @@ name := "CryptoNode"
 
 version := "0.1"
 
-scalaVersion := "2.12.8"
-
 lazy val btc = (project in file("btc")).settings(
-  libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.8",
-  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.6",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.3",
+  libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.6.0-M5",
+  libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.0.0-M1",
   libraryDependencies += "org.bouncycastle" % "bcprov-jdk15on" % "1.61",
   libraryDependencies += "commons-codec" % "commons-codec" % "1.12",
   libraryDependencies += "commons-io" % "commons-io" % "2.6",

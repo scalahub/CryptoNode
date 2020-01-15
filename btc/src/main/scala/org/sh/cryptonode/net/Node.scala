@@ -31,7 +31,7 @@ trait Node extends EventListener {
 
   import scala.concurrent.duration._
   import akka.pattern.ask 
-  implicit val timeout = Timeout(30 seconds)
+  implicit val timeout = Timeout(30.seconds)
   /* https://alvinalexander.com/scala/akka-actor-how-to-send-message-wait-for-reply-ask
    * https://groups.google.com/forum/#!topic/play-framework/a8Lh3v7jAZw */
   private def await[T](future:Future[Any]) = Await.result(future, timeout.duration).asInstanceOf[T]

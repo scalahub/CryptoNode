@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Files
 import org.sh.cryptonode.btc._
 import org.sh.cryptonode.ecc.Util._
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 import org.sh.cryptonode.util._
 import org.sh.cryptonode.btc.BitcoinUtil._
 import org.sh.cryptonode.util.BytesUtil._
@@ -33,8 +33,8 @@ object BlockParserTestVectors {
   val blk1FileRaw = "000000000000000001f942eb4bfa0aeccb6a14c268f4c72d5fff17270da771b9.txt" // from https://blockchain.info/block/000000000000000001f942eb4bfa0aeccb6a14c268f4c72d5fff17270da771b9?format=hex
   //  block is around 750 kb, too big to store in code, so read json from file
   val blk1FileJson = "000000000000000001f942eb4bfa0aeccb6a14c268f4c72d5fff17270da771b9.json.txt" // https://chainquery.com/bitcoin-api/getblock/000000000000000001f942eb4bfa0aeccb6a14c268f4c72d5fff17270da771b9/true
-  val blk1Json = Files.readAllLines(new File(s"resources/$blk1FileJson").toPath).mkString
-  val blk1Raw = Files.readAllLines(new File(s"resources/$blk1FileRaw").toPath).mkString.trim
+  val blk1Json = Files.readAllLines(new File(s"resources/$blk1FileJson").toPath).asScala.mkString
+  val blk1Raw = Files.readAllLines(new File(s"resources/$blk1FileRaw").toPath).asScala.mkString.trim
   //  val blk1Json = Files.readAllLines(new File(ResourceUtil.getFileLocation(blk1FileJson)).toPath).mkString
   //  val blk1Raw = Files.readAllLines(new File(ResourceUtil.getFileLocation(blk1FileRaw)).toPath).mkString.trim
   val blk1Size = 749157   //  found from bitcoind api

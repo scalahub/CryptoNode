@@ -11,7 +11,7 @@ import org.sh.cryptonode.util.StringUtil._
 import org.sh.cryptonode.btc.BitcoinUtil._
 import org.sh.cryptonode.util.Json2XML
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 
 object TxParserTest extends App {
   import TxParserTestVectors._
@@ -266,7 +266,7 @@ object CoreValidTxTestVectors {
   // It does not check the standardness or validity of tx according to core rules. This is done elsewhere
   Seq((vJsonFile, 83153), (ivJsonFile, 42752)).foreach{  // size found via first run
     case (jsonFile, size) =>
-      val json = Files.readAllLines(new File(s"resources/$jsonFile").toPath).reduceLeft(_ + _)
+      val json = Files.readAllLines(new File(s"resources/$jsonFile").toPath).asScala.reduceLeft(_ + _)
       require(json.size == size, s"Found ${json.size}. Required $size") // size found via first run
       val xmls = (Json2XML.jsonStringToXML(s"""{"data":$json}""") \ "data").map(_ \ "array").filter(_.size > 1)
       xmls.foreach{xml =>
