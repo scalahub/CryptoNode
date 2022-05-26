@@ -1,4 +1,3 @@
-
 package org.sh.cryptonode
 
 import org.sh.cryptonode.ecc.Util._
@@ -19,7 +18,7 @@ object TestECC extends App {
   println("Testing test vectors2 (prvKey, pubKey)")
   testTvs(TestVectorsECC2.s, true)
   println("Testing EC addititon and commutativity")
-  1 to 100 foreach {i =>
+  1 to 100 foreach { i =>
     print(".")
     val a = randInt(32) mod n
     val b = randInt(32) mod n
@@ -38,32 +37,37 @@ object TestECC extends App {
   }
   println
   println("All ECC tests passed!")
-  def randInt(numBytes:Int) = {
+  def randInt(numBytes: Int) = {
     val bytes = Array.fill(numBytes)(0x00.toByte)
     scala.util.Random.nextBytes(bytes)
     BigInt(bytes.encodeHex, 16)
   }
-  def assertException[T <: Exception, S](e:Class[T])(f: => S) =
-    try {f; assert(false) } catch { case a:Any => assert(a.getClass == e) }
+  def assertException[T <: Exception, S](e: Class[T])(f: => S) =
+    try { f; assert(false) }
+    catch { case a: Any => assert(a.getClass == e) }
 
-  def testTvs(s:String, hexKey:Boolean) = {
-    s.lines.map(_.trim).filterNot(_.isEmpty).grouped(3).toArray.map{a =>
-      val k = a(0).drop("k = ".size).trim
-      val x = a(1).drop("x = ".size).trim
-      val y = a(2).drop("y = ".size).trim
-      val point = new Point(x, y)
-      val eccPubKey = new ECCPrvKey(if (hexKey) BigInt(k, 16) else BigInt(k), true).eccPubKey
-      (point, eccPubKey)
-      assert(point == eccPubKey.point)
-      assertException(PointAtInfinityException.getClass)(n * point)
-      // below code does exactly the same as above line
-      try {
-        (n * point)
-        assert(false)
-      } catch {
-        case a:Any =>
-          assert(a == PointAtInfinityException)
-      }
+  def testTvs(s: String, hexKey: Boolean) = {
+
+    s.linesIterator.map(_.trim).filterNot(_.isEmpty).grouped(3).toArray.map {
+      a =>
+        val k = a(0).drop("k = ".size).trim
+        val x = a(1).drop("x = ".size).trim
+        val y = a(2).drop("y = ".size).trim
+        val point = new Point(x, y)
+        val eccPubKey =
+          new ECCPrvKey(if (hexKey) BigInt(k, 16) else BigInt(k), true)
+            .eccPubKey
+        (point, eccPubKey)
+        assert(point == eccPubKey.point)
+        assertException(PointAtInfinityException.getClass)(n * point)
+        // below code does exactly the same as above line
+        try {
+          (n * point)
+          assert(false)
+        } catch {
+          case a: Any =>
+            assert(a == PointAtInfinityException)
+        }
     }
   }
 }
@@ -72,7 +76,8 @@ object TestVectorsECC1 {
   // from: https://crypto.stackexchange.com/a/21206/81
   // Curve: secp256k1
 
-  val s = """
+  val s =
+    """
 k = 1
 x = 79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
 y = 483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
@@ -255,7 +260,8 @@ y = B7C52588D95C3B9AA25B0403F1EEF75702E84BB7597AABE663B82F6F04EF2777
 """
 }
 object TestVectorsECC2 {
-  val s = """
+  val s =
+    """
 m = AA5E28D6A97A2479A65527F7290311A3624D4CC0FA1578598EE3C2613BF99522
 X = 34F9460F0E4F08393D192B3C5133A6BA099AA0AD9FD54EBCCFACDFA239FF49C6
 Y = 0B71EA9BD730FD8923F6D25A7A91E7DD7728A960686CB5A901BB419E0F2CA232

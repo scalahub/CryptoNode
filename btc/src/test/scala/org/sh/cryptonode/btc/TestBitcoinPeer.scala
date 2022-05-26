@@ -5,16 +5,18 @@ import org.sh.cryptonode.net._
 
 object TestBitcoinPeer extends App {
   isMainNet = true // set to true for main net (default)
-  // Peer.debug = false // prints a lot of info
-  Peer.debug = true // prints a lot of info
+  Peer.debug = false
+  // Peer.debug = true // prints a lot of info
 
   val node = new BitcoinSNode(isMainNet)
   // Below shows how to add handlers for events (block or tx received)
-  node.addOnTxHandler("myTxHandler", tx => println(s"[tx] $tx"))
+  // node.addOnTxHandler("myTxHandler", tx => println(s"[tx] $tx"))
   node.addOnBlkHandler("myBlkHandler", blk => println(s"\n[blk] $blk"))
 
   //node.connectTo("localhost", false) // connect to given node (false implies disable tx relay)
-  node.connectToAllSeeds(true) // connect to seed nodes (false implies disable tx relay)
+  node.connectToAllSeeds(
+    true
+  ) // connect to seed nodes (false implies disable tx relay)
 
   Thread.sleep(10000) // wait for connnect 10 secs
 
@@ -26,13 +28,15 @@ object TestBitcoinPeer extends App {
       BitcoinSNode.pushTx(tx) // send tx to PeerGroup to broadcast */
 
   println("Asking for blk ...")
-  val (blk, time) = timed(node.getBlock("00000000000000000012560afe84f2bcc3df39fa42da68d1102490bbbd91af31"))
+  val (blk, time) = timed(
+    node.getBlock(
+      "00000000000000000012560afe84f2bcc3df39fa42da68d1102490bbbd91af31"
+    )
+  )
   println(s"blk received in $time millis")
-
 
   def timed[T](f: => T) = { // takes a method f outputting T and times it (i.e., finds how many millis did it take to invoke f)
     val st = System.currentTimeMillis
     (f, System.currentTimeMillis - st)
   }
 }
-
