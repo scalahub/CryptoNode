@@ -18,7 +18,7 @@ ThisBuild / developers := List(
   )
 )
 
-ThisBuild / description := "Miscellaneous tools for Scala"
+ThisBuild / description := "Cryptocurrency node for bitcoin"
 ThisBuild / licenses := List(
   "The Unlicense" -> new URL("https://unlicense.org/")
 )
