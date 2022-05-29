@@ -1,10 +1,13 @@
-sbt core/test:run
+sbt root/test:run
 
-sbt wallet/test:run
+sbt btc/test:run
 
 sbt bitcoind/test:run
 
 sbt bch/test:run
 
-// to run wallet 
-sbt "wallet/run -a topSecretSeed 2022 correct horse battery staple"
+# Alternate command (for newer versions of SBT)
+
+# sbt "project btc" "test:run"
+
+# sbt "project root" "test:run"

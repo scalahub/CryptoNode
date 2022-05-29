@@ -18,7 +18,7 @@ object TestBitcoinPeer extends App {
     true
   ) // connect to seed nodes (false implies disable tx relay)
 
-  Thread.sleep(10000) // wait for connnect 10 secs
+  Thread.sleep(10000) // wait for connect 10 secs
 
   println("Started ...")
 
@@ -34,6 +34,12 @@ object TestBitcoinPeer extends App {
     )
   )
   println(s"blk received in $time millis")
+
+  node.disconnectFromAll
+
+  Peer.system.terminate()
+
+  System.exit(0)
 
   def timed[T](f: => T) = { // takes a method f outputting T and times it (i.e., finds how many millis did it take to invoke f)
     val st = System.currentTimeMillis
