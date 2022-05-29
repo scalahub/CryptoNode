@@ -2,11 +2,14 @@ package org.sh.cryptonode.btc
 
 import org.sh.cryptonode.btc.BitcoinS.isMainNet
 import org.sh.cryptonode.btc.DataStructures.{TxIn, TxOut, TxWit}
-import org.sh.cryptonode.util.Base58Check
+import org.sh.cryptonode.util.Bech32.fromBase32
+import org.sh.cryptonode.util.{Base58Check, Bech32}
 import org.sh.cryptonode.util.BigIntUtil._
 import org.sh.cryptonode.util.HashUtil.dsha256
 import org.sh.cryptonode.util.StringUtil._
 import org.sh.cryptonode.util.BytesUtil._
+
+import scala.util.{Failure, Success, Try}
 
 object BitcoinUtil {
 
@@ -26,18 +29,27 @@ object BitcoinUtil {
   //  val OP_PushData4 = 0x4e.toByte
 
   // address prefixes start /* https://en.bitcoin.it/wiki/List_of_address_prefixes  */
-  val P2PKH  = 0x00.toByte
-  val P2SH   = 0x05.toByte
 
-  val TEST_P2PKH = 0x6f.toByte   // testnet
-  val TEST_P2SH = 0xc4.toByte    // testnet
+  sealed trait KnownAddressType
+
+  object P2PKH_ADDRESS_TYPE extends KnownAddressType
+  object P2SH_ADDRESS_TYPE extends KnownAddressType
+  object BECH32_ADDRESS_TYPE extends KnownAddressType
+
+  val P2PKH = 0x00.toByte
+  val P2SH = 0x05.toByte
+
+  val TEST_P2PKH = 0x6f.toByte // testnet
+  val TEST_P2SH = 0xc4.toByte // testnet
 
   //  val DATA = 0xc8.toByte // = 200 decimal. Custom (created for storing data. Not a standard!)
   //  val T_DATA = 0xcd.toByte // = 205 decimal. Custom (created for storing data. Not a standard!) TESTNET
   // NOTE: Do we need separate TESTNET code for DATA (above) and UNKNOWN (below) ?
 
-  val UNKNOWN = 0x29.toByte // = 41 decimal. Results in starting with r. Custom (created for denoting any other unknown script types. Not a standard!)
-  val TEST_UNKNOWN = 0xff.toByte // = 255 decimal. Results in starting with 6. Custom (created for denoting any other unknown script types. Not a standard!) TESTNET
+  val UNKNOWN =
+    0x29.toByte // = 41 decimal. Results in starting with r. Custom (created for denoting any other unknown script types. Not a standard!)
+  val TEST_UNKNOWN =
+    0xff.toByte // = 255 decimal. Results in starting with 6. Custom (created for denoting any other unknown script types. Not a standard!) TESTNET
   // address prefixes end
 
   // From spec, default version bytes are 01 00 00 00 (little endian)
@@ -46,9 +58,17 @@ object BitcoinUtil {
   val defaultTxVersion = 1
   val defaultTxLockTime = 0
 
-  val sigHashAllBytes = getFixedIntBytes(0x01, 4)  // 1 implies SIGHASH_ALL // https://en.bitcoin.it/wiki/OP_CHECKSIG
+  val sigHashAllBytes =
+    getFixedIntBytes(
+      0x01,
+      4
+    ) // 1 implies SIGHASH_ALL // https://en.bitcoin.it/wiki/OP_CHECKSIG
 
-  val sigHashAll_UAHF_Bytes = getFixedIntBytes(0x41, 4)  // 1 implies SIGHASH_ALL // https://en.bitcoin.it/wiki/OP_CHECKSIG  , 0x40 is FORKID
+  val sigHashAll_UAHF_Bytes =
+    getFixedIntBytes(
+      0x41,
+      4
+    ) // 1 implies SIGHASH_ALL // https://en.bitcoin.it/wiki/OP_CHECKSIG  , 0x40 is FORKID
   val sigHash_UAHF_Byte = 0x41.toByte
 
   type Amount = BigInt
@@ -56,68 +76,166 @@ object BitcoinUtil {
 
   private val decimalDigits = 8
 
-  def insertDecimal(bigInt:BigInt) = { // inserts decimal to a BigInt and converts result to String
+  def insertDecimal(bigInt: BigInt) = { // inserts decimal to a BigInt and converts result to String
     val posStr = bigInt.abs.toString
     val len = posStr.length
-    val str = if (len < (decimalDigits+1)) ("0."+"0"*(decimalDigits-len)+posStr) else posStr.substring(0, len-decimalDigits)+"."+posStr.substring(len-decimalDigits)
-    if (bigInt.signum < 0) "-"+str else str
+    val str =
+      if (len < (decimalDigits + 1))
+        ("0." + "0" * (decimalDigits - len) + posStr)
+      else
+        posStr.substring(0, len - decimalDigits) + "." + posStr.substring(
+          len - decimalDigits
+        )
+    if (bigInt.signum < 0) "-" + str else str
   }
-  def removeDecimal(s:String) = (
-    new BigDecimal(new java.math.BigDecimal(s)) * BigDecimal("1"+"0"*decimalDigits)
-  ).toBigInt.toString
+  def removeDecimal(s: String) =
+    (
+      new BigDecimal(new java.math.BigDecimal(s)) * BigDecimal(
+        "1" + "0" * decimalDigits
+      )
+    ).toBigInt.toString
 
-  def getKnownScriptPubKey(scriptPubKey:Seq[Byte]) = {
+  def getAddressType(scriptPubKey: Seq[Byte]): Option[KnownAddressType] = {
     // check if its one of p2sh or p2pk and well encoded
-    // currently bech32 not supported
     scriptPubKey.size match {
-      case 23 if
-        scriptPubKey(0) == OP_Hash160 &&
-        scriptPubKey(1) == 20.toByte &&
-        scriptPubKey(22) == OP_Equal => Some(P2SH)
-      case 25 if
-        scriptPubKey(0) == OP_Dup &&
-        scriptPubKey(1) == OP_Hash160 &&
-        scriptPubKey(2) == 20.toByte &&
-        scriptPubKey(23) == OP_EqualVerify &&
-        scriptPubKey(24) == OP_CheckSig => Some(P2PKH) // p2pkh
-      case _ => None
+      case 22
+          if scriptPubKey(0) == 0.toByte &&
+            scriptPubKey(1) == 20.toByte =>
+        Some(BECH32_ADDRESS_TYPE)
+      case 34
+          if scriptPubKey(0) == 0.toByte &&
+            scriptPubKey(1) == 32.toByte =>
+        Some(BECH32_ADDRESS_TYPE)
+      case 23
+          if scriptPubKey(0) == OP_Hash160 &&
+            scriptPubKey(1) == 20.toByte &&
+            scriptPubKey(22) == OP_Equal =>
+        Some(P2SH_ADDRESS_TYPE)
+      case 25
+          if scriptPubKey(0) == OP_Dup &&
+            scriptPubKey(1) == OP_Hash160 &&
+            scriptPubKey(2) == 20.toByte &&
+            scriptPubKey(23) == OP_EqualVerify &&
+            scriptPubKey(24) == OP_CheckSig =>
+        Some(P2PKH_ADDRESS_TYPE) // p2pkh
+      case n
+          if scriptPubKey(0) >= 0x51 && scriptPubKey(0) <= 0x60 && scriptPubKey(
+            1
+          ) == n - 2 =>
+        Some(BECH32_ADDRESS_TYPE)
+      case _ =>
+        None
     }
   }
 
-  def getScriptPubKeyFromAddress(address:Address):Seq[Byte] = {
-    val (scriptPubKey, isMainNetAddr) = getScriptPubKeyAndNetFromAddress(address)
+  def getScriptPubKeyFromAddress(address: Address): Seq[Byte] = {
+    val (scriptPubKey, isMainNetAddr) = getScriptPubKeyAndNetFromAddress(
+      address
+    )
     if (isMainNet == isMainNetAddr) scriptPubKey
-    else throw new Exception(s"Invalid network. $address (MainNet = $isMainNetAddr) while MainNet = $isMainNet")
+    else
+      throw new Exception(
+        s"Invalid network. $address (MainNet = $isMainNetAddr) while MainNet = $isMainNet"
+      )
   }
 
-  def getScriptPubKeyAndNetFromAddress(address:Address):(Seq[Byte], Boolean) = { // Boolean returns isMainNet
+  def getScriptPubKeyAndNetFromAddressBech32(
+      address: Address
+  ): (Seq[Byte], Boolean) = {
+    val (hrp, data) = Bech32.decode(address)
+    val isMainNet = hrp match {
+      case "bc" | "BC" => true
+      case "tb" | "TB" => false
+      case _           => throw new Exception(s"Invalid Bech32 HRP value $hrp")
+    }
+    val version = data(0)
+    if (version < 0 || version > 16)
+      throw new Exception(s"Invalid Bech32 version $version")
+
+    val program = fromBase32(data.drop(1))
+
+    if (program.size < 2 || program.size > 40)
+      throw new Exception(
+        s"Invalid program size ${program.size}. Must be between 2 and 40"
+      )
+
+    if (version == 0) {
+      if (program.size != 20 && program.size != 32)
+        throw new Exception(
+          s"Invalid program size ${program.size} for version 0"
+        )
+      if (address.size != 42 && address.size != 62)
+        throw new Exception(
+          s"Invalid address size ${address.size} for version 0"
+        )
+    }
+
+    val versionInt = if (version == 0) 0x00 else version + 0x50
+
+    val script = Seq(versionInt.toByte, program.size.toByte) ++ program
+    (script, isMainNet)
+  }
+
+  def getScriptPubKeyAndNetFromAddress(
+      address: Address
+  ): (Seq[Byte], Boolean) = { // Boolean returns isMainNet
+    Try(getScriptPubKeyAndNetFromAddressBase58(address)) match {
+      case Success(value)     => value
+      case Failure(exception) => getScriptPubKeyAndNetFromAddressBech32(address)
+    }
+  }
+
+  def getScriptPubKeyAndNetFromAddressBase58(
+      address: Address
+  ): (Seq[Byte], Boolean) = { // Boolean returns isMainNet
     val decoded = Base58Check.decode(address)
-    val (prefix, pubKeyHashOrData) = (decoded(0), decoded.drop(1))  // first byte is network version and address type
+    val (prefix, pubKeyHashOrData) =
+      (
+        decoded(0),
+        decoded.drop(1)
+      ) // first byte is network version and address type
     /*  From the Bitcoin Wiki you can get the hex codes for the four opcodes in this locking script
         (OP_DUP is 0x76, OP_HASH160 is 0xa9, OP_EQUALVERIFY is 0x88, and OP_CHECKSIG is 0xac).       */
     prefix match {
-      case P2PKH|TEST_P2PKH =>
-        if (pubKeyHashOrData.size != 20) throw new Exception(s"Expected 20 bytes for pubKeyHashOrData. Found ${pubKeyHashOrData.size}")
-        (Seq(OP_Dup, OP_Hash160, pubKeyHashOrData.size.toByte) ++ pubKeyHashOrData ++ Seq(OP_EqualVerify, OP_CheckSig),
-         if (prefix == TEST_P2PKH) false else true)
-      case P2SH|TEST_P2SH =>
-        if (pubKeyHashOrData.size != 20) throw new Exception(s"Expected 20 bytes for pubKeyHashOrData. Found ${pubKeyHashOrData.size}")
-        (Seq(OP_Hash160, pubKeyHashOrData.size.toByte) ++ pubKeyHashOrData ++ Seq(OP_Equal),
-         if (prefix == TEST_P2SH) false else true)
-        /* Below case for handling data (i.e., OP_Return). Commenting it for now as it is not needed in V1
+      case P2PKH | TEST_P2PKH =>
+        if (pubKeyHashOrData.size != 20)
+          throw new Exception(
+            s"Expected 20 bytes for pubKeyHashOrData. Found ${pubKeyHashOrData.size}"
+          )
+        (
+          Seq(
+            OP_Dup,
+            OP_Hash160,
+            pubKeyHashOrData.size.toByte
+          ) ++ pubKeyHashOrData ++ Seq(OP_EqualVerify, OP_CheckSig),
+          if (prefix == TEST_P2PKH) false else true
+        )
+      case P2SH | TEST_P2SH =>
+        if (pubKeyHashOrData.size != 20)
+          throw new Exception(
+            s"Expected 20 bytes for pubKeyHashOrData. Found ${pubKeyHashOrData.size}"
+          )
+        (
+          Seq(
+            OP_Hash160,
+            pubKeyHashOrData.size.toByte
+          ) ++ pubKeyHashOrData ++ Seq(OP_Equal),
+          if (prefix == TEST_P2SH) false else true
+        )
+      /* Below case for handling data (i.e., OP_Return). Commenting it for now as it is not needed in V1
       case DATA|T_DATA => // avoid DATA case and let UNKNOWN handle it
         val dataScript = pubKeyHashOrData // data includes push instruction, not just data (i.e., entire script)
         if (dataScript(0) > OP_PushData4) throw new Exception(s"Expected OP_PushData instruction at byte 0 of dataScript")
         (Seq(OP_Return) ++ dataScript,
          if (prefix == T_DATA) false else true) */
-      case UNKNOWN|TEST_UNKNOWN => // unknown script (non standard)
-        (pubKeyHashOrData,
-         if (prefix == TEST_UNKNOWN) false else true)
-      case any => throw new Exception(s"Unknown address prefix 0x${any.toHexString}")
+      case UNKNOWN | TEST_UNKNOWN => // unknown script (non standard)
+        (pubKeyHashOrData, if (prefix == TEST_UNKNOWN) false else true)
+      case any =>
+        throw new Exception(s"Unknown address prefix 0x${any.toHexString}")
     }
   }
 
-  def getAddrFromOutScript(outScript:Array[Byte]) = {
+  def getAddrFromOutScript(outScript: Array[Byte]) = {
     // if its a simple pay to address (OP_DUP OP_HASH160 OP_PUSHDATXX)
     // https://bitcoin.stackexchange.com/a/19108/2075
     // OP_DUP = 0x76
@@ -129,15 +247,19 @@ object BitcoinUtil {
       if (outScript(0) == OP_Dup && outScript(1) == OP_Hash160) {
         // P2PKH standard output
         val numBytes = outScript(2).toInt
-        val addrBytes = (if (isMainNet) P2PKH else TEST_P2PKH) +: outScript.drop(3).take(numBytes)
+        val addrBytes = (if (isMainNet) P2PKH else TEST_P2PKH) +: outScript
+          .drop(3)
+          .take(numBytes)
         Some(getBase58FromBytes(addrBytes)) // need to decode output
-      } else if (outScript(0) == OP_Hash160){
+      } else if (outScript(0) == OP_Hash160) {
         // P2SH standard output
         val numBytes = outScript(1).toInt
-        val addrBytes = (if (isMainNet) P2SH else TEST_P2SH) +: outScript.drop(2).take(numBytes)
+        val addrBytes = (if (isMainNet) P2SH else TEST_P2SH) +: outScript
+          .drop(2)
+          .take(numBytes)
         Some(getBase58FromBytes(addrBytes)) // need to decode output
-      // // below code handles OP_Return, in case we need to read data stored on blockchain
-      /* // commented out for now.
+        // // below code handles OP_Return, in case we need to read data stored on blockchain
+        /* // commented out for now.
       } else if (outScript(0) == OP_Return) {
         // Data (non-standard) output
         // data read from next byte
@@ -164,56 +286,64 @@ object BitcoinUtil {
         // uses the script 52534b424c4f434b3addbf517adf8ffd4bca7751505b39c9013a0d1fd479fc4e901b39dd57b347c624 (hex)
         // which uses the opcodes 0x52 (push "2" to stack) and 0x52 (push "3" to stack)
         // See https://en.bitcoin.it/wiki/Script#Constants
-        val unknownScriptBytes = (if (isMainNet) UNKNOWN else TEST_UNKNOWN) +: outScript
+        val unknownScriptBytes =
+          (if (isMainNet) UNKNOWN else TEST_UNKNOWN) +: outScript
         Some(getBase58FromBytes(unknownScriptBytes))
       }
     }
   }
 
   // UNSIGNED
-  def getUInt4LittleEndian(bytes:Array[Byte]) = { // returns integer from 4 bytes int
-    if (bytes.size != 4) throw new Exception("Expected 4 bytes in UINT32. Found "+bytes.size)
+  def getUInt4LittleEndian(bytes: Array[Byte]) = { // returns integer from 4 bytes int
+    if (bytes.size != 4)
+      throw new Exception("Expected 4 bytes in UINT32. Found " + bytes.size)
     BigInt(bytes.reverse.encodeHex, 16).toLong
   }
 
   // SIGNED
-  def getSInt4LittleEndian(bytes:Array[Byte]) = { // returns signed integer from 4 bytes int
-    if (bytes.size != 4) throw new Exception("Expected 4 bytes in UINT32. Found "+bytes.size)
+  def getSInt4LittleEndian(bytes: Array[Byte]) = { // returns signed integer from 4 bytes int
+    if (bytes.size != 4)
+      throw new Exception("Expected 4 bytes in UINT32. Found " + bytes.size)
     BigInt(bytes.reverse).toLong
   }
 
-  def getUInt8LittleEndian(bytes:Array[Byte]) = { // returns integer from 4 bytes int
-    if (bytes.size != 8) throw new Exception("Expected 8 bytes in UINT64. Found "+bytes.size)
+  def getUInt8LittleEndian(bytes: Array[Byte]) = { // returns integer from 4 bytes int
+    if (bytes.size != 8)
+      throw new Exception("Expected 8 bytes in UINT64. Found " + bytes.size)
     BigInt(bytes.reverse.encodeHex, 16)
   }
 
-  def getHexFromLittleEndian(bytes:Array[Byte]) = bytes.reverse.encodeHex
+  def getHexFromLittleEndian(bytes: Array[Byte]) = bytes.reverse.encodeHex
 
-  def getBase58FromBytes(addrBytes:Array[Byte]) =
+  def getBase58FromBytes(addrBytes: Array[Byte]) =
     Base58Check.encodePlain(addrBytes ++ dsha256(addrBytes).take(4))
 
   val max4VarInt = BigInt("FFFFFFFF", 16).toLong
   val max2VarInt = BigInt("FFFF", 16).toLong
   val max1VarInt = BigInt("FD", 16).toLong
 
-  def getFixedIntBytes(bigInt:BigInt, len:Int) = {
-    val value = bigInt.toBytes // converts using Hex (toBytes is a custom method added via implicit def)
+  def getFixedIntBytes(bigInt: BigInt, len: Int) = {
+    val value =
+      bigInt.toBytes // converts using Hex (toBytes is a custom method added via implicit def)
     val padLen = len - value.size // pad remaining out of len bytes
-    val pad = Array.fill(padLen)(if (bigInt < 0) 0xFF.toByte else 0x00.toByte) // negatives padded with 0xFF
+    val pad =
+      Array.fill(padLen)(
+        if (bigInt < 0) 0xff.toByte else 0x00.toByte
+      ) // negatives padded with 0xFF
     (pad ++ value).reverse // reverse because Little Endian
   }
 
-  def getCompactIntBytes(l:Long) = { // reverse of getCompactInt
+  def getCompactIntBytes(l: Long) = { // reverse of getCompactInt
     // https://en.bitcoin.it/wiki/Protocol_documentation#Variable_length_integer
     if (l < 0) throw new Exception("VarInt must be >= 0")
     if (l > max4VarInt) { // 8 bytes
-      Seq(0xFF.toByte)++getFixedIntBytes(l, 8)
+      Seq(0xff.toByte) ++ getFixedIntBytes(l, 8)
     } else {
       if (l > max2VarInt) { // 4 bytes
-        Seq(0xFE.toByte)++getFixedIntBytes(l, 4)
+        Seq(0xfe.toByte) ++ getFixedIntBytes(l, 4)
       } else {
         if (l >= max1VarInt) { //2 bytes
-          Seq(0xFD.toByte)++getFixedIntBytes(l, 2)
+          Seq(0xfd.toByte) ++ getFixedIntBytes(l, 2)
         } else { // 0 bytes
           Seq(l.toByte)
         }
@@ -229,42 +359,63 @@ Value	Storage length	Format
      */
   }
 
-  def toggleEndianString(hex:String) = { // little to big and vice versa on each call
-    if (hex.size % 2 == 1) throw new Exception(s"Hex has odd number of chars (${hex.size})")
+  def toggleEndianString(hex: String) = { // little to big and vice versa on each call
+    if (hex.size % 2 == 1)
+      throw new Exception(s"Hex has odd number of chars (${hex.size})")
     hex.grouped(2).toSeq.reverse.mkString.decodeHex
   }
 
-  protected [cryptonode] def createNonSegWitTx(version:Long, ins:Seq[TxIn], outs:Seq[TxOut], lockTime:Long) =
-    createSegWitTx(version, ins map {in => (in, TxWit(Nil))}, outs, lockTime)
+  protected[cryptonode] def createNonSegWitTx(
+      version: Long,
+      ins: Seq[TxIn],
+      outs: Seq[TxOut],
+      lockTime: Long
+  ) =
+    createSegWitTx(version, ins map { in => (in, TxWit(Nil)) }, outs, lockTime)
 
-  def createSegWitTx(version:Long, insWits:Seq[(TxIn, TxWit)], outs:Seq[TxOut], lockTime:Long) = {    // inputs also contains amount
+  def createSegWitTx(
+      version: Long,
+      insWits: Seq[(TxIn, TxWit)],
+      outs: Seq[TxOut],
+      lockTime: Long
+  ) = { // inputs also contains amount
     val (ins, wits) = insWits.unzip
-    val inBytes = ins.flatMap{in =>
+    val inBytes = ins.flatMap { in =>
       val prevTxHashBytes = toggleEndianString(in.txHash)
       val vOutBytes = getFixedIntBytes(BigInt(in.vOut), 4)
       val scriptSig = in.optScriptSig.getOrElse(Nil)
       val scriptSigBytes = getCompactIntBytes(scriptSig.size)
       prevTxHashBytes ++ vOutBytes ++ scriptSigBytes ++ scriptSig ++ in.seqNumBytes
     }
-    val outBytes = outs.flatMap{out =>
+    val outBytes = outs.flatMap { out =>
       val valueBytes = getFixedIntBytes(out.value, 8)
       val lockingScriptBytes = out.optScriptPubKey match {
         case Some(scriptPubKey) =>
           val scriptPubKeySizeBytes = getCompactIntBytes(scriptPubKey.size)
           scriptPubKeySizeBytes ++ scriptPubKey
-        case _ => Seq(0x00.toByte) // should not happen under normal circumstances
+        case _ =>
+          Seq(0x00.toByte) // should not happen under normal circumstances
       }
       valueBytes ++ lockingScriptBytes
     }
     val isSegWit = wits.exists(_.data.nonEmpty)
-    val witBytes = if (isSegWit) wits.flatMap{wit =>
-      getCompactIntBytes(wit.data.size) ++ wit.data.flatMap{stackItem => getCompactIntBytes(stackItem.size) ++ stackItem}
-    } else Nil
+    val witBytes = if (isSegWit) wits.flatMap { wit =>
+      getCompactIntBytes(wit.data.size) ++ wit.data.flatMap { stackItem =>
+        getCompactIntBytes(stackItem.size) ++ stackItem
+      }
+    }
+    else Nil
     val inCtrBytes = getCompactIntBytes(ins.size)
     val outCtrBytes = getCompactIntBytes(outs.size)
-    val flagMarkerBytes = if (isSegWit) Seq(0x00.toByte, 0x01.toByte) else Nil // 1st byte after version is 00 for a segwit tx
+    val flagMarkerBytes =
+      if (isSegWit) Seq(0x00.toByte, 0x01.toByte)
+      else Nil // 1st byte after version is 00 for a segwit tx
     val versionBytes = getFixedIntBytes(version, 4)
-    val lockTimeBytes = getFixedIntBytes(lockTime, 4) // should be Seq[Byte](0x00, 0x00, 0x00, 0x00)
+    val lockTimeBytes =
+      getFixedIntBytes(
+        lockTime,
+        4
+      ) // should be Seq[Byte](0x00, 0x00, 0x00, 0x00)
     versionBytes ++ flagMarkerBytes ++ inCtrBytes ++ inBytes ++ outCtrBytes ++ outBytes ++ witBytes ++ lockTimeBytes
   }.toArray
 }

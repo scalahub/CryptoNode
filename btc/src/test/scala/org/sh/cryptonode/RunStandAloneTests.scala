@@ -15,6 +15,7 @@ object RunStandAloneTests {
     TestBlockParser, // tests that block is correctly being parsed. Test vectors from varous sources
     TestBase64,
     TestBase58,
+    TestBech32,
     TestBloomFilter,
     TestBytesToBits,
     TestMerkleBlock

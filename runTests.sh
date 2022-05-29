@@ -1,4 +1,4 @@
-sbt root/test:run
+# sbt root/test:run
 
 sbt btc/test:run
 
