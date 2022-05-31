@@ -20,7 +20,8 @@ class PubKey_P2PKH(eccPubKey: ECCPubKey, mainNet: Boolean)
       https://bitcoin.stackexchange.com/a/3839/2075
       https://en.bitcoin.it/wiki/Base58Check_encoding#Version_bytes  */
   lazy val redeemScript = Nil // should not be needed for P2PKH
-  lazy val address = {
+
+  override lazy val address = {
     val hash = doubleHashedPubKeyBytes
     val addrBytes = if (mainNet) 0x00.toByte +: hash else 111.toByte +: hash
     getBase58FromBytes(addrBytes)
@@ -41,7 +42,7 @@ class PubKey_P2SH_P2PK(eccPubKey: ECCPubKey, mainNet: Boolean)
   lazy val redeemScript =
     Seq(eccPubKey.bytes.size.toByte) ++ eccPubKey.bytes ++ Seq(OP_CheckSig)
 
-  lazy val address = { // simple 1 out of 1 P2SH from BIP16
+  override lazy val address = { // simple 1 out of 1 P2SH from BIP16
     val redeemScriptHash = hash160(redeemScript)
     val addrBytes =
       (if (mainNet) 0x05.toByte else 0xc4.toByte) +: redeemScriptHash
@@ -78,7 +79,7 @@ class PubKey_P2SH_P2WPKH(point: Point, mainNet: Boolean)
 
       The scriptPubKey is the locking script, and is NOT used in computation of the address itself!   */
 
-  lazy val address = {
+  override lazy val address = {
     /*  Test vector from: https://bitcoin.stackexchange.com/q/60961/2075
 
       Public key - compressed:
@@ -102,7 +103,7 @@ class PubKey_P2SH_P2WPKH(point: Point, mainNet: Boolean)
       Then do BitcoinUtil.getBase58FromBytes(above value)   */
     val redeemScriptHash = hash160(redeemScript)
     val addrBytes =
-      (if (mainNet) 0x05.toByte else 196.toByte) +: redeemScriptHash
+      (if (mainNet) 0x05.toByte else 0xc4.toByte) +: redeemScriptHash
     getBase58FromBytes(addrBytes)
   }
 }

@@ -23,6 +23,8 @@ https://gist.github.com/scalahub/3ff855c3404f7aef953d0c079cf71901
 
   val int2StrMap: Map[Int, Char] = str2IntMap.map(_.swap)
 
+  def toInt(bits: String) = Integer.valueOf(bits, 2).toInt
+
   def getInts(string: String): Seq[Int] = {
     string.map(str2IntMap)
   }
@@ -103,7 +105,7 @@ https://gist.github.com/scalahub/3ff855c3404f7aef953d0c079cf71901
         .grouped(5)
         .toArray
     grouped(grouped.size - 1) = (grouped.last + "0" * 5).take(5)
-    grouped.map(Integer.valueOf(_, 2).toInt)
+    grouped.map(toInt)
   }
 
   def fromBase32(ints: Seq[Int]): Array[Byte] = {
@@ -122,6 +124,6 @@ https://gist.github.com/scalahub/3ff855c3404f7aef953d0c079cf71901
       grouped.dropRight(1)
     } else grouped
 
-    byteStrings.map(Integer.valueOf(_, 2).toByte)
+    byteStrings.map(toInt(_).toByte)
   }
 }

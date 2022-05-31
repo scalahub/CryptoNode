@@ -1,6 +1,6 @@
 package org.sh.cryptonode.btc
 
-import org.sh.cryptonode.btc.BitcoinS.isMainNet
+import org.sh.cryptonode.btc.Bitcoin.isMainNet
 import org.sh.cryptonode.btc.DataStructures.{TxIn, TxOut, TxWit}
 import org.sh.cryptonode.util.Bech32.fromBase32
 import org.sh.cryptonode.util.{Base58Check, Bech32}
@@ -14,11 +14,11 @@ import scala.util.{Failure, Success, Try}
 object BitcoinUtil {
 
   //http://www.soroushjp.com/2014/12/20/bitcoin-multisig-the-hard-way-understanding-raw-multisignature-bitcoin-transactions/
-  val OP_Dup = 0x76.toByte
-  val OP_Hash160 = 0xa9.toByte
+  val OP_Dup         = 0x76.toByte
+  val OP_Hash160     = 0xa9.toByte
   val OP_EqualVerify = 0x88.toByte
-  val OP_Equal = 0x87.toByte
-  val OP_CheckSig = 0xac.toByte
+  val OP_Equal       = 0x87.toByte
+  val OP_CheckSig    = 0xac.toByte
   //  val OP_Return = 0x6a.toByte
 
   //  // below used only for OP_Return. Not needed for now, hence commented out
@@ -32,15 +32,15 @@ object BitcoinUtil {
 
   sealed trait KnownAddressType
 
-  object P2PKH_ADDRESS_TYPE extends KnownAddressType
-  object P2SH_ADDRESS_TYPE extends KnownAddressType
+  object P2PKH_ADDRESS_TYPE  extends KnownAddressType
+  object P2SH_ADDRESS_TYPE   extends KnownAddressType
   object BECH32_ADDRESS_TYPE extends KnownAddressType
 
   val P2PKH = 0x00.toByte
-  val P2SH = 0x05.toByte
+  val P2SH  = 0x05.toByte
 
   val TEST_P2PKH = 0x6f.toByte // testnet
-  val TEST_P2SH = 0xc4.toByte // testnet
+  val TEST_P2SH  = 0xc4.toByte // testnet
 
   //  val DATA = 0xc8.toByte // = 200 decimal. Custom (created for storing data. Not a standard!)
   //  val T_DATA = 0xcd.toByte // = 205 decimal. Custom (created for storing data. Not a standard!) TESTNET
@@ -55,7 +55,7 @@ object BitcoinUtil {
   // From spec, default version bytes are 01 00 00 00 (little endian)
   // To get version, we need to reverse it.
   // This maps to 00 00 00 01 (in binary), which is 1
-  val defaultTxVersion = 1
+  val defaultTxVersion  = 1
   val defaultTxLockTime = 0
 
   val sigHashAllBytes =
@@ -71,14 +71,14 @@ object BitcoinUtil {
     ) // 1 implies SIGHASH_ALL // https://en.bitcoin.it/wiki/OP_CHECKSIG  , 0x40 is FORKID
   val sigHash_UAHF_Byte = 0x41.toByte
 
-  type Amount = BigInt
+  type Amount  = BigInt
   type Address = String
 
   private val decimalDigits = 8
 
   def insertDecimal(bigInt: BigInt) = { // inserts decimal to a BigInt and converts result to String
     val posStr = bigInt.abs.toString
-    val len = posStr.length
+    val len    = posStr.length
     val str =
       if (len < (decimalDigits + 1))
         ("0." + "0" * (decimalDigits - len) + posStr)
@@ -94,6 +94,23 @@ object BitcoinUtil {
         "1" + "0" * decimalDigits
       )
     ).toBigInt.toString
+
+  def getHashFromScriptPubKey(
+      scriptPubKey: Seq[Byte]
+  ): (Seq[Byte], KnownAddressType) = {
+    // if a P2PKH, it returns pk hash
+    // if a P2SH, it returns script hash
+    getAddressType(scriptPubKey) match {
+      case Some(P2SH_ADDRESS_TYPE) =>
+        val size = scriptPubKey(1)
+        require(size == 20) // for now
+        (scriptPubKey.drop(2).take(size), P2SH_ADDRESS_TYPE)
+      case Some(P2PKH_ADDRESS_TYPE) =>
+        require(scriptPubKey(2) == 20)
+        (scriptPubKey.drop(3).take(20), P2PKH_ADDRESS_TYPE)
+      case _ => throw new Exception("Unsupported or invalid scriptPubKey")
+    }
+  }
 
   def getAddressType(scriptPubKey: Seq[Byte]): Option[KnownAddressType] = {
     // check if its one of p2sh or p2pk and well encoded
@@ -183,6 +200,23 @@ object BitcoinUtil {
       case Success(value)     => value
       case Failure(exception) => getScriptPubKeyAndNetFromAddressBech32(address)
     }
+  }
+
+  def getAddressFromHash(
+      hash: Array[Byte],
+      addressType: KnownAddressType,
+      mainNet: Boolean
+  ): Address = {
+    require(hash.size == 20, s"Required hash size 20. Found ${hash.size}")
+    val addrBytes: Array[Byte] =
+      addressType match {
+        case P2PKH_ADDRESS_TYPE =>
+          (if (mainNet) 0x00.toByte else 111.toByte) +: hash
+        case P2SH_ADDRESS_TYPE =>
+          (if (mainNet) 0x05.toByte else 0xc4.toByte) +: hash
+        case any => throw new Exception(s"Unsupported address type $any")
+      }
+    getBase58FromBytes(addrBytes)
   }
 
   def getScriptPubKeyAndNetFromAddressBase58(
@@ -329,7 +363,7 @@ object BitcoinUtil {
     val pad =
       Array.fill(padLen)(
         if (bigInt < 0) 0xff.toByte else 0x00.toByte
-      ) // negatives padded with 0xFF
+      )                    // negatives padded with 0xFF
     (pad ++ value).reverse // reverse because Little Endian
   }
 
@@ -382,9 +416,9 @@ Value	Storage length	Format
     val (ins, wits) = insWits.unzip
     val inBytes = ins.flatMap { in =>
       val prevTxHashBytes = toggleEndianString(in.txHash)
-      val vOutBytes = getFixedIntBytes(BigInt(in.vOut), 4)
-      val scriptSig = in.optScriptSig.getOrElse(Nil)
-      val scriptSigBytes = getCompactIntBytes(scriptSig.size)
+      val vOutBytes       = getFixedIntBytes(BigInt(in.vOut), 4)
+      val scriptSig       = in.optScriptSig.getOrElse(Nil)
+      val scriptSigBytes  = getCompactIntBytes(scriptSig.size)
       prevTxHashBytes ++ vOutBytes ++ scriptSigBytes ++ scriptSig ++ in.seqNumBytes
     }
     val outBytes = outs.flatMap { out =>
@@ -405,7 +439,7 @@ Value	Storage length	Format
       }
     }
     else Nil
-    val inCtrBytes = getCompactIntBytes(ins.size)
+    val inCtrBytes  = getCompactIntBytes(ins.size)
     val outCtrBytes = getCompactIntBytes(outs.size)
     val flagMarkerBytes =
       if (isSegWit) Seq(0x00.toByte, 0x01.toByte)

@@ -1,6 +1,6 @@
 package org.sh.cryptonode.btc
 
-import org.sh.cryptonode.btc.BitcoinS._
+import org.sh.cryptonode.btc.Bitcoin._
 import org.sh.cryptonode.net._
 
 object TestBitcoinPeer extends App {
@@ -8,7 +8,7 @@ object TestBitcoinPeer extends App {
   Peer.debug = false
   // Peer.debug = true // prints a lot of info
 
-  val node = new BitcoinSNode(isMainNet)
+  val node = new BitcoinNode(isMainNet)
   // Below shows how to add handlers for events (block or tx received)
   // node.addOnTxHandler("myTxHandler", tx => println(s"[tx] $tx"))
   node.addOnBlkHandler("myBlkHandler", blk => println(s"\n[blk] $blk"))

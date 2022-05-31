@@ -1,6 +1,6 @@
 package org.sh.cryptonode
 
-import org.sh.cryptonode.btc.BitcoinS._
+import org.sh.cryptonode.btc.Bitcoin._
 import org.sh.cryptonode.btc._
 import org.sh.cryptonode.ecc.Util._
 import org.sh.cryptonode.ecc._
@@ -25,11 +25,11 @@ object TestKeyRecovery1 {
   println(
     "Test 1: [recover keys using method 1, validate signatures, custom signing method]"
   )
-  val a = new ECCPrvKey(100, true)
-  val b = a.eccPubKey
-  val c = a.sign("hello")
-  val h = sha256Bytes2Bytes("hello".getBytes)
-  val (r, s) = decodeDERSig(c)
+  val a         = new ECCPrvKey(100, true)
+  val b         = a.eccPubKey
+  val c         = a.sign("hello")
+  val h         = sha256Bytes2Bytes("hello".getBytes)
+  val (r, s)    = decodeDERSig(c)
   val recovered = recoverPubKeyPoints(r, s, h)
   assert(recovered.size == 4)
   recovered.flatten.foreach { pk =>
@@ -46,14 +46,14 @@ object TestKeyRecovery2 {
   val b = a.eccPubKey
   val c = a.sign("hello")
   //////////////////////////////////
-  val h = sha256Bytes2Bytes("hello".getBytes)
+  val h      = sha256Bytes2Bytes("hello".getBytes)
   val (r, s) = decodeDERSig(c)
-  val z = BigInt(h.encodeHex, 16)
-  val rInv = r.modInverse(n)
+  val z      = BigInt(h.encodeHex, 16)
+  val rInv   = r.modInverse(n)
 
   val (ry1, ry2) = findYs(r)
-  val R1 = new Point(r, ry1)
-  val R2 = new Point(r, ry2)
+  val R1         = new Point(r, ry1)
+  val R2         = new Point(r, ry2)
 
   val P1: Point = rInv * (s * R1 - z * G)
   val P2: Point = rInv * (s * R2 - z * G)
@@ -77,9 +77,9 @@ object TestKeyRecovery3 {
   val msg =
     "18426974636F696E205369676E6564204D6573736167653A0A17736F206D616E7920746F2063686F6F73652066726F6D21".decodeHex
   // Bitcoin Signed Message: so many to choose from!
-  val h = dsha256(msg)
-  val sig = "3006020104020104"
-  val (r, s) = decodeDERSig(sig)
+  val h         = dsha256(msg)
+  val sig       = "3006020104020104"
+  val (r, s)    = decodeDERSig(sig)
   val recovered = recoverPubKeyPoints(r, s, h)
   assert(recovered.size == 4)
   recovered.flatten.map { pk =>
@@ -154,12 +154,12 @@ object TestKeyRecovery4 {
         .map(_.trim)
         .filterNot(_.isEmpty)
         .toArray // remove empty lines
-    val msg = lines(0).drop("message       = ".size)
-    val sig = lines(3).drop("DER signature = ".size)
+    val msg    = lines(0).drop("message       = ".size)
+    val sig    = lines(3).drop("DER signature = ".size)
     val (r, s) = decodeDERSig(sig)
-    val h = dsha256(msg.decodeHex)
-    val rpks = recoverPubKeyPoints(r, s, h).flatten // .reverse
-    val pks = rpks.map(rpk => new ECCPubKey(rpk, false))
+    val h      = dsha256(msg.decodeHex)
+    val rpks   = recoverPubKeyPoints(r, s, h).flatten // .reverse
+    val pks    = rpks.map(rpk => new ECCPubKey(rpk, false))
     val allRPks: Seq[ECCPubKey] = pks ++ rpks.map { rpk =>
       new ECCPubKey(rpk, true)
     }
@@ -167,16 +167,16 @@ object TestKeyRecovery4 {
     allRPks zip testpks map {
       case (rpk, line12) =>
         val line1 = line12(0)
-        val a = line1.split(" ")
-        val addr = a(0)
-        val sig = a(1)
-        val msg = a.drop(2).reduceLeft(_ + " " + _).drop(1).dropRight(1)
+        val a     = line1.split(" ")
+        val addr  = a(0)
+        val sig   = a(1)
+        val msg   = a.drop(2).reduceLeft(_ + " " + _).drop(1).dropRight(1)
         assert(rpk.point.verify(h, r, s))
         assert(msg == "so many to choose from!")
         val pkHex = line12(1).split("#")(1).trim
         assert(rpk.encodeRecoverySig(r, s, h).encodeBase64 == sig)
         assert(pkHex.toLowerCase == rpk.hex.toLowerCase)
-        val btcPk = new PubKey_P2PKH(rpk, false) // testnet
+        val btcPk   = new PubKey_P2PKH(rpk, false) // testnet
         val newAddr = btcPk.address
         assert(newAddr == addr, s"Expected $addr, found ${newAddr}")
     }
@@ -188,15 +188,15 @@ object TestKeyRecovery5 {
   1 to 10 foreach { i =>
     1 to 10 foreach { j =>
       0 to 7 foreach { recid =>
-        val e = encodeRecoverySigForIndex(recid, p - i, p - j)
+        val e            = encodeRecoverySigForIndex(recid, p - i, p - j)
         val (_k, _i, _j) = decodeRecoverySig(e)
         assert(_k == recid)
         assert(_i == p - i)
         assert(_j == p - j)
 
-        val int1 = BigInt(sha256Bytes2Bytes(s"$recid#$i#$j".getBytes)).abs
-        val int2 = BigInt(sha256Bytes2Bytes(s"$recid~$i~$j".getBytes)).abs
-        val e1 = encodeRecoverySigForIndex(recid, int1, int2)
+        val int1                = BigInt(sha256Bytes2Bytes(s"$recid#$i#$j".getBytes)).abs
+        val int2                = BigInt(sha256Bytes2Bytes(s"$recid~$i~$j".getBytes)).abs
+        val e1                  = encodeRecoverySigForIndex(recid, int1, int2)
         val (_k1, _int1, _int2) = decodeRecoverySig(e1)
         assert(_k1 == recid)
         assert(_int1 == int1)
@@ -212,11 +212,11 @@ object TestKeyRecovery6 {
   1 to 10 foreach { i =>
     Seq(true, false).map { compr =>
       Seq(true, false).map { mainNet =>
-        val int = BigInt(sha256Bytes2Bytes(BigInt(i).toByteArray))
-        val key = new ECCPrvKey(int mod n, compr)
+        val int      = BigInt(sha256Bytes2Bytes(BigInt(i).toByteArray))
+        val key      = new ECCPrvKey(int mod n, compr)
         val p2pkhKey = new PrvKey_P2PKH(key, mainNet)
-        val address = p2pkhKey.pubKey.address
-        val sig = key.signMessageBitcoinD(msg)
+        val address  = p2pkhKey.pubKey.address
+        val sig      = key.signMessageBitcoinD(msg)
 
         val (byteIndex, r, s) =
           decodeRecoverySig(
@@ -253,9 +253,9 @@ object TestKeyRecovery6 {
 
   val mainNet = true
   1 to 20 foreach { i =>
-    val int = BigInt(sha256Bytes2Bytes(BigInt(i).toByteArray))
-    val key = new PrvKey_P2SH_P2WPKH(int mod n, mainNet)
-    val address = key.pubKey.address
+    val int       = BigInt(sha256Bytes2Bytes(BigInt(i).toByteArray))
+    val key       = new PrvKey_P2SH_P2WPKH(int mod n, mainNet)
+    val address   = key.pubKey.address
     val eccPrvKey = key.eccPrvKey
 
     val sig = eccPrvKey.signMessageBitcoinD(msg)

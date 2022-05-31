@@ -1,11 +1,10 @@
-
 package org.sh.cryptonode
 
-import org.sh.cryptonode.btc.BitcoinS
+import org.sh.cryptonode.btc.Bitcoin
 
 object TestAddress extends App {
-  def assertBitcoin(address:String, isValid:Boolean) = {
-    assert(BitcoinS.isValidAddress(address) == isValid, s"$address test failed. Expected $isValid")
+  def assertBitcoin(address: String, isValid: Boolean) = {
+    assert(Bitcoin.isValidAddress(address) == isValid, s"$address test failed. Expected $isValid")
   }
   // test vectors from https://rosettacode.org/wiki/Bitcoin/address_validation#Java
   assertBitcoin("1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i", true);
@@ -21,6 +20,6 @@ object TestAddress extends App {
   assertBitcoin("1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62izz", false);
   assertBitcoin("1Q1pE5vPGEEMqRcVRMbtBK842Y6Pzo6nJ9", false);
   assertBitcoin("1AGNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62I", false);
-    
+
   println("Address isValid tests passed")
 }

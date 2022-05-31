@@ -5,7 +5,7 @@ import org.sh.cryptonode.btc.DataStructures.{TxIn, TxOut}
 
 import scala.util.Try
 
-object BitcoinS {
+object Bitcoin {
 
   var isMainNet = true // set to false for testnet
 

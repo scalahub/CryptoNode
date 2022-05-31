@@ -44,14 +44,15 @@ https://github.com/scalahub/CryptoNode/tree/master/btc/src/test/scala/org/sh/cry
 #### Connecting to the Network
 
 From the [TestBitcoinPeer](
-https://github.com/scalahub/CryptoNode/blob/master/btc/src/test/scala/org/sh/cryptonode/btc/TestBitcoinPeer.scala "TestBitcoinPeer") example: 
-```scala
+https://github.com/scalahub/CryptoNode/blob/master/btc/src/test/scala/org/sh/cryptonode/btc/TestBitcoinPeer.scala "TestBitcoinPeer") example:
+
+```
 val useMainNet = false // set to true for main net (default)
-val node = new org.sh.cryptonode.btc.BitcoinSNode(useMainNet)
+val node = new org.sh.cryptonode.btc.BitcoinNode(useMainNet)
 ```
 #### Listening for Transactions and Blocks
 Once a node is created, here is how we can add handlers for listening to transactions and blocks.
-```scala
+```
 node.addOnTxHandler("myTxHandler", tx => println(s"new transaction with id $tx"))
 node.addOnBlkHandler("myBlkHandler", blk => println(s"new block with id $blk"))
 ```
@@ -59,7 +60,7 @@ node.addOnBlkHandler("myBlkHandler", blk => println(s"new block with id $blk"))
 
 The following code (based on the [TestTx example](
 https://github.com/scalahub/CryptoNode/blob/master/btc/src/test/scala/org/sh/cryptonode/TestTx.scala "TestTx example")) shows how how to create a transaction having both SegWit and non-SegWit inputs: 
-```scala
+```
 val useMainNet = false // mainnet is false
 
 // generate a big integer to use as secret 
@@ -107,7 +108,7 @@ val tx = new TxParser(signed).getTx // creates a Tx object
 ```
 #### Broadcasting transactions
 Once the transaction is created, we can broadcast it using the node created earlier:  
-```scala
+```
 node.pushTx(tx)
 ```
 
