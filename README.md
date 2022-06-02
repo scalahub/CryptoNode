@@ -5,14 +5,15 @@
 
 [![deprecated](http://badges.github.io/stability-badges/dist/deprecated.svg)](http://github.com/badges/stability-badges)
 
-CryptoNode is a cryptocurrency library written in Scala. It can be used for implementing nodes and wallets. It supports SPV mode out of the box and can be converted to a full node by implementing the core consensus rules and the execution engine. It supports the Secp256k1 elliptic curve used in Bitcoin and its forks. Note that this library is not maintained so use it in TestNet only. It will also not work with the latest version of most coins. 
+CryptoNode is a bitcoin library written in Scala. It can be used for implementing nodes and wallets. 
+It supports SPV mode out of the box and can be converted to a full node by implementing the core consensus rules and the execution engine. 
+Note that this library is experimental so use it in TestNet only.
 
-## Currently supported features
-
-#### Bitcoin
+## Supported features
 
 - Signing transactions and address generation:
-  - SegWit (P2SH-P2WPKH) 
+  - SegWit legacy (P2SH-P2WPKH) 
+  - SegWit Bech32 (P2WPKH) 
   - P2SH-P2PK
   - P2PKH
 - Node connectivity:
@@ -25,18 +26,6 @@ CryptoNode is a cryptocurrency library written in Scala. It can be used for impl
   - RPC
   - Blockchain database parser (to reuse bitcoind chain)
 
-#### BitcoinCash 
-
-- Signing transactions and address generation
-  - P2PKH
-- Node connectivity
-  - Listen for blocks and transactions
-  - Broadcast transaction
-
-The following are planned in a future release:
-
-- Bech32 addresses
-- ZCash t-addresses
 
 ## Usage 
 Please refer to the tests for example usage:
