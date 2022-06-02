@@ -1,5 +1,3 @@
-name := "CryptoNode"
-
 ThisBuild / version := "1.2.2"
 
 lazy val btc = (project in file("btc")).settings(
@@ -28,7 +26,7 @@ lazy val root = (project in file("."))
   .settings(
     publishArtifact := false,
     mainClass in (Test, run) := Some("org.sh.cryptonode.btc.TestBitcoinPeer"),
-    name := "CryptoNode"
+    name := "CryptoNode-btc"
   )
   .dependsOn(
     btc % "compile->compile;test->test",
