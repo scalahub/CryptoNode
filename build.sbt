@@ -1,6 +1,6 @@
 name := "CryptoNode"
 
-ThisBuild / version := "1.2.1"
+ThisBuild / version := "1.2.2"
 
 lazy val btc = (project in file("btc")).settings(
   libraryDependencies += "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.3",

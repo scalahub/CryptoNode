@@ -15,12 +15,11 @@ import org.sh.cryptonode.util.BytesUtil._
           1. BigInt (the actual private key)
           2. Boolean indicating compressed (false) or uncompressed (true)
         -------------------------------------------
-        PrvKey has 5 concrete subclasses
+        PrvKey has 4 concrete subclasses
           PrvKey_P2PKH
           PrvKey_P2SH_P2PK
           PrvKey_P2SH_P2WPKH
           PrvKey_P2WPKH (bech32)
-          PrvKey_P2PKH_UAHF
         -------------------------------------------
         PrvKey also encapsulates:
           PubKey (abstract class), whose constructor has two things
@@ -31,12 +30,11 @@ import org.sh.cryptonode.util.BytesUtil._
           1. Point (the actual EC point)
           2. Boolean indicating compressed (false) or uncompressed (true)
         -------------------------------------------
-        PubKey has 5 concrete subclasses, one corresponding to each subclass of PrvKey
+        PubKey has 4 concrete subclasses, one corresponding to each subclass of PrvKey
           PubKey_P2PKH
           PubKey_P2SH_P2PK
           PubKey_P2SH_P2WPKH
           PubKey_P2WPKH
-          PubKey_P2PKH_UAHF
         -------------------------------------------
         PubKey also encapsulates:
           Address (string): depends on type of network, compression used and the subclass of PubKey
@@ -72,8 +70,6 @@ object PrvKey {
   }
   def getPrvKeyP2WPKH(wif: String) = { // for bech32 addresses
     val (eccPrvKey, mainNet) = getECCPrvKeyAndNet(wif)
-    if (!eccPrvKey.compressed)
-      throw new Exception("P2WPKH requires compressed private key")
     new PrvKey_P2WPKH(eccPrvKey.bigInt, mainNet)
   }
 }
