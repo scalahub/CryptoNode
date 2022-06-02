@@ -43,16 +43,16 @@ import org.sh.cryptonode.util.BytesUtil._
  */
 object PrvKey {
   private[cryptonode] def getECCPrvKeyAndNet(wif: String) = {
-    val bytes = Base58Check.decodePlain(wif).dropRight(4)
+    val bytes                      = Base58Check.decodePlain(wif).dropRight(4)
     val (mainNetByte, testNetByte) = (0x80.toByte, 0xef.toByte)
     val mainNet = bytes(0) match {
       case `mainNetByte` => true
       case `testNetByte` => false
-      case any           => ??? // should not happen
+      case any           => throw new Exception("Invalid leading byte in WIF") // should not happen
     }
     val isCompressed = bytes.last == 0x01 && bytes.size == 34
-    val keyBytes = if (isCompressed) bytes.drop(1).take(32) else bytes.drop(1)
-    val eccPrvKey = new ECCPrvKey(keyBytes.encodeHex, isCompressed)
+    val keyBytes     = if (isCompressed) bytes.drop(1).take(32) else bytes.drop(1)
+    val eccPrvKey    = new ECCPrvKey(keyBytes.encodeHex, isCompressed)
     (eccPrvKey, mainNet)
   }
   // default should be P2PKH

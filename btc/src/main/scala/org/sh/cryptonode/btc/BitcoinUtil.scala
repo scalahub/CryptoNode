@@ -303,7 +303,7 @@ object BitcoinUtil {
           case OP_PushData1 =>  (outScript.drop(2).take(1),         1) // next byte contains number of items to push
           case OP_PushData2 =>  (outScript.drop(2).take(2).reverse, 2) // next 2 bytes contains number of items to push
           case OP_PushData4 =>  (outScript.drop(2).take(4).reverse, 4) // next 4 bytes contains number of items to push
-          case _ => ??? // should not happen as per wiki: https://en.bitcoin.it/wiki/Script
+          case _ => throw new Exception("Invalid leading byte in outscript")  // should not happen as per wiki: https://en.bitcoin.it/wiki/Script
         }
         val dataSize = BigInt(dataSizeBytes).toInt // check issue with negatives !!!
         val data = outScript.drop(2+dataSizeNumBytes).take(dataSize)

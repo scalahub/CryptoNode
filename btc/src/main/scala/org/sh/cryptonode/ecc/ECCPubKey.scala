@@ -19,10 +19,10 @@ object ECCPubKey {
         val y = signByte match {
           case "02" => even
           case "03" => odd
-          case _    => ??? // should not happen
+          case _    => throw new Exception("Invalid sign byte in ECC pubkey") // should not happen
         }
         new ECCPubKey(Point(x, y), true)
-      case _ => ??? // should not happen
+      case _ => throw new Exception("Invalid leading byte in ECC pubkey") // should not happen
     }
   }
 }
