@@ -1,16 +1,15 @@
 package org.sh.cryptonode.net
 
-import org.sh.cryptonode.btc.DataStructures.{Blk, Tx}
-import org.sh.cryptonode.net.DataStructures._
-import org.sh.cryptonode.net.Parsers.RejectMessage
-import org.sh.cryptonode.net.Payloads._
-import org.sh.cryptonode.net.NetUtil._
-import org.sh.cryptonode.util.StringUtil._
-import org.sh.cryptonode.util.AkkaUtil._
 import akka.actor.Status._
 import akka.actor.{Actor, ActorRef, Props, Terminated}
+import org.sh.cryptonode.btc.DataStructures.{Blk, Tx}
+import org.sh.cryptonode.net.DataStructures._
+import org.sh.cryptonode.net.NetUtil._
+import org.sh.cryptonode.net.Parsers.RejectMessage
+import org.sh.cryptonode.net.Payloads._
+import org.sh.cryptonode.util.AkkaUtil._
+
 import scala.collection.mutable.{Map => MMap}
-import scala.concurrent.duration._
 
 /*
  * P2P network design is as follows (refer to the figure below):
@@ -51,8 +50,6 @@ trait EventListener {
   def addOnBlkHandler(id: String, onBlk: Blk => Unit) = onBlkMap += id -> onBlk
   def addOnTxHandler(id: String, onTx: Tx => Unit)    = onTxMap += id            -> onTx
 }
-
-import PeerGroup._
 
 case class PeerGroupConfig(version: Int, userAgent: String, serviceBit: Int, magicBytes: Array[Byte])
 

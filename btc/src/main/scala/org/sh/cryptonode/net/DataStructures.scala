@@ -1,16 +1,14 @@
 package org.sh.cryptonode.net
 
+import org.sh.cryptonode.btc.DataStructures.Tx
+import org.sh.cryptonode.net.NetUtil._
+import org.sh.cryptonode.net.Payloads._
+import org.sh.cryptonode.util.BytesUtil._
+import org.sh.cryptonode.util.HashUtil._
+import org.sh.cryptonode.util.StringUtil._
+
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicLong
-import org.sh.cryptonode.btc.Bitcoin._
-import org.sh.cryptonode.util.StringUtil._
-import org.sh.cryptonode.util.BytesUtil._
-import org.sh.cryptonode.btc.DataStructures.Tx
-import org.sh.cryptonode.ecc.Util._
-import org.sh.cryptonode.util.HashUtil._
-import org.sh.cryptonode.btc.BitcoinUtil._
-import NetUtil._
-import Payloads._
 
 object DataStructures {
 

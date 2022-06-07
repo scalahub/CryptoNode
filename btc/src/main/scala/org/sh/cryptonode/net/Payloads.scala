@@ -1,14 +1,11 @@
 package org.sh.cryptonode.net
 
-import java.net.InetSocketAddress
-import org.sh.cryptonode.btc.Bitcoin._
-import org.sh.cryptonode.util.StringUtil._
-import org.sh.cryptonode.net.DataStructures._
-import org.sh.cryptonode.util.BytesUtil._
-import org.sh.cryptonode.ecc.Util._
-import org.sh.cryptonode.util.HashUtil._
 import org.sh.cryptonode.btc.BitcoinUtil._
-import NetUtil._
+import org.sh.cryptonode.net.DataStructures._
+import org.sh.cryptonode.net.NetUtil._
+import org.sh.cryptonode.util.BytesUtil._
+
+import java.net.InetSocketAddress
 
 object Payloads {
 

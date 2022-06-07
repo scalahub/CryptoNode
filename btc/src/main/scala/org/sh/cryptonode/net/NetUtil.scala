@@ -1,11 +1,10 @@
 package org.sh.cryptonode.net
 
-import org.sh.cryptonode.btc.BitcoinUtil._
 import org.sh.cryptonode.btc.AbstractParser
-import org.sh.cryptonode.btc.Bitcoin._
-import org.sh.cryptonode.util.StringUtil._
+import org.sh.cryptonode.btc.BitcoinUtil._
 import org.sh.cryptonode.net.Payloads.NetAddrPayload
 import org.sh.cryptonode.util.BytesUtil._
+import org.sh.cryptonode.util.StringUtil._
 
 object NetUtil {
   def getVarStringBytes(s: String): Seq[Byte] = {

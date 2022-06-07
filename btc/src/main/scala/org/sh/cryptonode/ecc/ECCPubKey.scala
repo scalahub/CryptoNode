@@ -1,8 +1,6 @@
 package org.sh.cryptonode.ecc
+
 import org.sh.cryptonode.ecc.Util._
-import org.sh.cryptonode.btc.Bitcoin._
-import org.sh.cryptonode.btc.BitcoinUtil._
-import org.sh.cryptonode.util.StringUtil._
 
 object ECCPubKey {
   def apply(secp256k1EncodedHex: String) = {

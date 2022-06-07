@@ -1,12 +1,12 @@
 package org.sh.cryptonode.net
 
-import org.sh.cryptonode.util.StringUtil._
-import org.sh.cryptonode.util.Base58Check
-import java.util.concurrent.atomic.AtomicInteger
-import scala.util.hashing.MurmurHash3
 import org.sh.cryptonode.btc._
 import org.sh.cryptonode.net.NetUtil._
+import org.sh.cryptonode.util.Base58Check
 import org.sh.cryptonode.util.BigIntUtil._
+
+import java.util.concurrent.atomic.AtomicInteger
+import scala.util.hashing.MurmurHash3
 
 object BloomFilter {
   val BYTES_MAX = 36000

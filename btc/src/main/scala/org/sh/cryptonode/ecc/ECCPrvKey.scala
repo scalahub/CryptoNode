@@ -1,12 +1,10 @@
 package org.sh.cryptonode.ecc
 
-import Util._
-import org.sh.cryptonode.btc.BitcoinUtil._
-import org.sh.cryptonode.util.BytesUtil._
-import org.sh.cryptonode.util.StringUtil._
+import org.sh.cryptonode.ecc.Util._
 import org.sh.cryptonode.util.BigIntUtil._
-import org.sh.cryptonode.btc.Bitcoin._
+import org.sh.cryptonode.util.BytesUtil._
 import org.sh.cryptonode.util.HashUtil._
+import org.sh.cryptonode.util.StringUtil._
 
 case class ECCPrvKey(bigInt: BigInt, compressed: Boolean) {
   def this(hex: String, compressed: Boolean) = this(BigInt(hex, 16), compressed)
